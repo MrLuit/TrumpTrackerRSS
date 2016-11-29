@@ -10,7 +10,7 @@ class RSS {
 		$this->db_file = $db_file;
 	}
 	public function getYAML() {
-		return spyc_load(file_get_contents("https://raw.githubusercontent.com/TrumpTracker/trumptracker.github.io/master/_data/data.yaml"));
+		return Spyc::YAMLLoadString(file_get_contents("https://raw.githubusercontent.com/TrumpTracker/trumptracker.github.io/master/_data/data.yaml"));
 	}
 	public function stripQuotes($text) {
 		$unquoted = preg_replace('/^(\'(.*)\'|"(.*)")$/', '$2$3', $text);
@@ -42,10 +42,16 @@ class RSS {
 		if(file_exists($this->old_file)) {
 			$yaml_old = file_get_contents($this->old_file);
 			$yaml_old = json_decode($yaml_old,true);
+			//print_r($points);
 			foreach($yaml_old as $y) {
 				if(!isset($points[$y['text']])) {
 					$this->newMessage("\"$y[text]\" has been removed from the list of policies.","Policy removed",$y);
 				}
+				//elseif(true) {
+				//	print_r($points);
+					//print_r($y);
+				//	die();
+				//}
 				elseif($points[$y['text']]['status'] != $y['status']) {
 					if($points[$y['text']]['status'] == "notStarted") {
 						$this->newMessage("\"$y[text]\" is not started anymore :(","Policy updated",$y);
@@ -70,11 +76,13 @@ class RSS {
 	}
 	public function updateOld($points) {
 		$points = json_encode($points);
-		file_put_contents($this->old_file,$points);
+		if(similar_text(file_get_contents($this->old_file),$points) > 50) {
+			file_put_contents($this->old_file,$points);
+		}
 	}
 	public function getDB() {
-		if(file_exists("db.json")) {
-			$rss = file_get_contents("db.json");
+		if(file_exists($this->db_file)) {
+			$rss = file_get_contents($this->db_file);
 			$rss = json_decode($rss,true);
 			krsort($rss);
 			return $rss;
