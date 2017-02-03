@@ -29,12 +29,8 @@ class RSS {
 	}
 	public function parsePoints($yaml) {
 		$points = array();
-		foreach($yaml['tabs'] as $t) {
-			foreach($t['sections'] as $s) {
-				foreach($s['points'] as $p) {
-					$points[$p['text']] = $p;
-				}
-			}
+		foreach($yaml['policies'] as $p) {
+			$points[$p['title']] = $p;
 		}
 		return $points;
 	}
@@ -44,41 +40,44 @@ class RSS {
 			$yaml_old = json_decode($yaml_old,true);
 			//print_r($points);
 			foreach($yaml_old as $y) {
-				if(!isset($points[$y['text']])) {
-					$this->newMessage("\"$y[text]\" has been removed from the list of policies.","Policy removed",$y);
+				if(!isset($points[$y['title']])) {
+					$this->newMessage("\"$y[title]\" has been removed from the list of policies.","Policy removed",$y);
 				}
 				//elseif(true) {
 				//	print_r($points);
 					//print_r($y);
 				//	die();
 				//}
-				elseif($points[$y['text']]['status'] != $y['status']) {
-					if($points[$y['text']]['status'] == "notStarted") {
-						$this->newMessage("\"$y[text]\" is not started anymore :(","Policy updated",$y);
+				elseif($points[$y['title']]['status'] != $y['status']) {
+					if($points[$y['title']]['status'] == "Not started") {
+						$this->newMessage("\"$y[title]\" is not started anymore :(","Policy updated",$y);
 					}
-					elseif($points[$y['text']]['status'] == "inProgress") {
-						$this->newMessage("\"$y[text]\" is now in progress!","Policy updated",$y);
+					elseif($points[$y['title']]['status'] == "In progress") {
+						$this->newMessage("\"$y[title]\" is now in progress!","Policy updated",$y);
 					}
-					elseif($points[$y['text']]['status'] == "achieved") {
-						$this->newMessage("\"$y[text]\" has been achieved!","Policy updated",$y);
+					elseif($points[$y['title']]['status'] == "Achieved") {
+						$this->newMessage("\"$y[title]\" has been achieved!","Policy updated",$y);
 					}
-					elseif($points[$y['text']]['status'] == "broken") {
-						$this->newMessage("\"$y[text]\" has been broken :(","Policy updated",$y);
+					elseif($points[$y['title']]['status'] == "Broken") {
+						$this->newMessage("\"$y[title]\" has been broken :(","Policy updated",$y);
+					}
+					elseif($points[$y['title']]['status'] == "Compromised") {
+						$this->newMessage("\"$y[title]\" has been compromised :|","Policy updated",$y);
 					}
 				}
 			}
 			foreach($points as $p) {
-				if(!isset($yaml_old[$p['text']])) {
-					$this->newMessage("\"$p[text]\" has been added to the list of policies!","Policy added",$p);
+				if(!isset($yaml_old[$p['title']])) {
+					$this->newMessage("\"$p[title]\" has been added to the list of policies!","Policy added",$p);
 				}
 			}
 		}
 	}
 	public function updateOld($points) {
 		$points = json_encode($points);
-		if(similar_text(file_get_contents($this->old_file),$points) > 50) {
+		//if(similar_text(file_get_contents($this->old_file),$points) > 50) {
 			file_put_contents($this->old_file,$points);
-		}
+		//}
 	}
 	public function getDB() {
 		if(file_exists($this->db_file)) {
