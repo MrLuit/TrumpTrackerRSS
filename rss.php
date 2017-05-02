@@ -1,15 +1,14 @@
 <?php
 require('rss.class.php');
-$rss = new RSS("old_data.json","db.json"); //Create RSS instance
-$yaml = $rss->getYAML(); //Get the newest YAML from github
-$points = $rss->parsePoints($yaml); //Parse the YAML correctly
+$db = mysqli_connect(); //Create DB instance
+$rss = new RSS($db); //Create RSS instance
+$json = $rss->getJSON(); //Get the newest JSON from github
+$points = $rss->parsePoints($json); //Parse the JSON correctly
 $rss->parseDifference($points); //See if there is any difference
-$rss->updateOld($points); //Update the yaml file to the newest YAML
-$rss = $rss->getDB(); //Get all previous changes
+$feed = $rss->getDB(); //Get all previous changes
 
 //Start actually parsing the RSS
 
-$i = 0;
 header("Content-Type: application/xml; charset=UTF-8");
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 ?>
@@ -20,18 +19,15 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 <description>RSS feed for all policy updates on Trump's presidency</description>
 <language>en-US</language>
 <?
-foreach($rss as $id => $item) {
-	$i++;
-	if($i < 10) {
-		echo "<item>\n";
-		echo "<guid isPermaLink='false'>$id</guid>\n";
-		echo "<title>$item[title]</title>\n";
-		echo "<link>$item[url]</link>\n";
-		echo "<description>$item[content]</description>\n";
-		$time = date('D, d M Y H:i:s T',$item['time']);
-		echo "<pubDate>$time</pubDate>\n";
-		echo "</item>\n";
-	}
+while($row = mysqli_fetch_assoc($feed)) {
+	echo "<item>\n";
+	echo "<guid isPermaLink='false'>$row[ID]</guid>\n";
+	echo "<title>$row[title]</title>\n";
+	echo "<link>$row[url]</link>\n";
+	echo "<description>$row[content]</description>\n";
+	$time = date('D, d M Y H:i:s T',$row['time']);
+	echo "<pubDate>$time</pubDate>\n";
+	echo "</item>\n";
 }
 ?>
 </channel>
